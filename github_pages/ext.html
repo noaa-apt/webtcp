@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebTCP Extension Handbook</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root {
+  --bg: #0f1117;
+  --fg: #e6edf3;
+  --acc: #4d8eff;
+  --code-bg: #161b22;
+  --code-fg: #c9d1d9;
+  --border: #30363d;
+  --sec: #8b949e;
+  --card: #161b22;
+  --th-bg: #1c2128;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.7 'Segoe UI', system-ui, Arial, sans-serif;
+}
+header {
+  background: #161b22;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  padding: 36px 60px 28px;
+}
+header h1 {
+  margin: 0 0 6px;
+  font-size: 2.1em;
+  letter-spacing: -0.5px;
+  font-weight: 600;
+}
+header p {
+  margin: 0;
+  color: var(--sec);
+  font-size: 1.05em;
+}
+nav {
+  background: #161b22;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 60px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+nav a {
+  color: var(--acc);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 60px 80px;
+}
+h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-top: 48px;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1.15em;
+  color: #c9d1d9;
+  margin-top: 28px;
+  font-weight: 600;
+}
+pre {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 18px 22px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  font: 14px/1.6 'Cascadia Code', 'Consolas', monospace;
+  margin: 16px 0;
+}
+code {
+  background: #21262d;
+  color: #e6edf3;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font: 13px 'Consolas', monospace;
+}
+.lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.lang i {
+  width: 18px;
+  text-align: center;
+  font-size: 15px;
+}
+.tip {
+  background: #0d1b2a;
+  border-left: 4px solid var(--acc);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.warn {
+  background: #2a1f0d;
+  border-left: 4px solid #d29922;
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+  font-size: 14px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  margin: 16px 0;
+}
+th {
+  background: var(--th-bg);
+  text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  color: #c9d1d9;
+}
+td {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+td code {
+  background: none;
+  padding: 0;
+  color: #79c0ff;
+}
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  color: var(--sec);
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>WebTCP Extension Handbook</h1>
+  <p>A complete reference for building, loading, and distributing extensions for WebTCP.</p>
+</header>
+
+<nav>
+  <a href="#overview">Overview</a>
+  <a href="#languages">Languages</a>
+  <a href="#structure">Structure</a>
+  <a href="#api">API Reference</a>
+  <a href="#ui">UI Widgets</a>
+  <a href="#audio">Audio &amp; IQ</a>
+  <a href="#examples">Examples</a>
+  <a href="#themes">Themes</a>
+</nav>
+
+<main>
+
+<h2 id="overview">Overview</h2>
+<p>Extensions extend WebTCP with custom decoders, visualizers, analyzers, and tools. They execute on the host machine inside a restricted sandbox and communicate with the browser interface through a straightforward message passing API.</p>
+<p>Extensions can:</p>
+<ul> 
+  <li>Receive live audio samples and decoded IQ data</li>
+  <li>Render custom panels containing text fields, sliders, toggles, images, and buttons</li>
+  <li>Write files (images, logs, etc) to a designated data directory on the server</li>
+  <li>Display popups and toast notifications in the browser</li>
+  <li>Respond to UI events in real time</li>
+</ul>
+<div class="warn"><b>Security notice:</b> Extentions don't have to be approved officially, Load extensions only from authors you trust.</div>
+
+<h2 id="languages">Supported Languages</h2>
+<p>WebTCP supports extensions written in four languages. Each language is executed by its own secure runner process:</p>
+<table>
+  <tr><th>Extension</th><th>Language</th><th>Notes</th></tr>
+  <tr>
+    <td><code>.py</code></td>
+    <td>
+      <span class="lang">
+        <i class="fab fa-python"></i>
+        Python 3.9+
+      </span>
+    </td>
+    <td>NumPy/SciPy access. This is Recommended for DSP work.</td>
+  </tr>
+  <tr>
+    <td><code>.lua</code></td>
+    <td>
+      <span class="lang">
+        <i class="fas fa-moon"></i>
+        Lua 5.4
+      </span>
+    </td>
+    <td>This is Lightweight with fast startup. This can Suitable for simple decoders.</td>
+  </tr>
+  <tr>
+    <td><code>.js</code></td>
+    <td>
+      <span class="lang">
+        <i class="fab fa-js"></i>
+        Node.js 18+
+      </span>
+    </td>
+    <td>Known for native async support, and JSON handling.</td>
+  </tr>
+  <tr>
+    <td><code>.cpp</code></td>
+    <td>
+      <span class="lang">
+        <i class="fas fa-file-code"></i>
+        C++17
+      </span>
+    </td>
+    <td>High Performance.</td>
+  </tr>
+</table>
+<div class="tip">Python is the recommended choice for most extensions since other languages have not been tested fully.</div>
+
+<h2 id="structure">Extension Structure in Python</h2>
+<p>The Python extension consists of a single file that subclasses <code>Extension</code> from the <code>sdr_ext</code> module:</p>
+<pre>from sdr_ext import Extension, ui
+
+class MyDecoder(Extension):
+    name = "My Decoder"
+    description = "lorem ipsum dolor sit amet consectetur adipiscing."
+    author = "Your Name"
+    version = "1.0"
+
+    def on_load(self):
+        # Called once when the extension starts.
+        # Initialize state and define the panel UI here.
+        self.set_panel([
+            ui.Label("status", "Ready."),
+            ui.Text("out", "Output", lines=6),
+            ui.Button("clear", "Clear"),
+        ], title="My Decoder", width=400)
+
+    def on_audio(self, samples, rate):
+        # Called with each chunk of float64 audio at 48000 Hz.
+        pass
+
+    def on_tick(self):
+        # Called approximately every 500 ms.
+        # Suitable for updating status labels.
+        pass
+
+    def on_event(self, widget_id, value):
+        # Called when the user interacts with a UI widget.
+        if widget_id == "clear":
+            self.set_text("out", "")
+</pre>
+
+<h2 id="api">API Reference</h2>
+
+<h3>Extension methods</h3>
+<table>
+  <tr><th>Method</th><th>Description</th></tr>
+  <tr>
+    <td><code>self.set_panel(widgets, title, width)</code></td>
+    <td>Creates or replaces the floating panel. Call from <code>on_load</code>.</td>
+  </tr>
+  <tr>
+    <td><code>self.set_label(id, text)</code></td>
+    <td>Updates the text of a Label widget.</td>
+  </tr>
+  <tr>
+    <td><code>self.set_text(id, text)</code></td>
+    <td>Replaces all text in a Text widget.</td>
+  </tr>
+  <tr>
+    <td><code>self.append_text(id, text)</code></td>
+    <td>Appends text to a Text widget (auto-scrolls).</td>
+  </tr>
+  <tr>
+    <td><code>self.set_image(id, array)</code></td>
+    <td>Updates an Image widget. Accepts a uint8 NumPy array of shape (H, W) or (H, W, 3).</td>
+  </tr>
+  <tr>
+    <td><code>self.set_value(id, value)</code></td>
+    <td>Sets the value of a Slider, Toggle, or Select widget.</td>
+  </tr>
+  <tr>
+    <td><code>self.popup(title, text)</code></td>
+    <td>Displays a modal popup in the browser.</td>
+  </tr>
+  <tr>
+    <td><code>self.save_image(filename, array)</code></td>
+    <td>Saves a PNG to the server data directory. Returns the file path.</td>
+  </tr>
+  <tr>
+    <td><code>self.data_dir</code></td>
+    <td>Path to the server-side directory available for file storage.</td>
+  </tr>
+  <tr>
+    <td><code>self.radio</code></td>
+    <td>Read-only dictionary containing: <code>freq</code>, <code>center</code>, <code>mode</code>, <code>bandwidth</code>, <code>sample_rate</code>, <code>audio_rate</code>, <code>squelch_open</code>, <code>agc</code>.</td>
+  </tr>
+</table>
+
+<h3>Overrideable callbacks</h3>
+<table>
+  <tr><th>Callback</th><th>Signature</th><th>Description</th></tr>
+  <tr>
+    <td><code>on_load</code></td>
+    <td><code>(self)</code></td>
+    <td>Called when the extension starts. Initialize state and UI.</td>
+  </tr>
+  <tr>
+    <td><code>on_audio</code></td>
+    <td><code>(self, samples: np.ndarray, rate: int)</code></td>
+    <td>New audio chunk. Samples are float64, mono, at <code>rate</code> Hz (typically 48000).</td>
+  </tr>
+  <tr>
+    <td><code>on_iq</code></td>
+    <td><code>(self, iq: np.ndarray, rate: float)</code></td>
+    <td>Raw channel IQ data (complex64) at the decimated rate. Enable with <code>self.request_iq(True)</code>.</td>
+  </tr>
+  <tr>
+    <td><code>on_tick</code></td>
+    <td><code>(self)</code></td>
+    <td>Periodic callback at approximately 500 ms intervals.</td>
+  </tr>
+  <tr>
+    <td><code>on_event</code></td>
+    <td><code>(self, widget_id: str, value)</code></td>
+    <td>Called when the user interacts with a UI widget.</td>
+  </tr>
+  <tr>
+    <td><code>on_unload</code></td>
+    <td><code>(self)</code></td>
+    <td>Called when the extension is stopping. Perform cleanup here.</td>
+  </tr>
+</table>
+
+<h2 id="ui">UI Widgets</h2>
+<pre>from sdr_ext import ui
+
+ui.Label("id", "initial text")
+ui.Text("id", "Label shown above box", lines=8)
+ui.Slider("id", "Label", min, max, default, step=1)
+ui.Toggle("id", "Label", default_bool)
+ui.Select("id", "Label", ["option1", "option2"], default)
+ui.Button("id", "Button label text")
+ui.Image("id", "Caption", clickable=False)
+</pre>
+<p>When <code>clickable=True</code> is set on an Image widget, <code>on_event</code> receives <code>value = {"x": 0..1, "y": 0..1}</code> representing the fractional click coordinates.</p>
+
+<h2 id="audio">Audio &amp; IQ Access</h2>
+<p>The <code>on_audio</code> callback delivers post-demodulation audio that has already passed through AGC, filters, and squelch. Samples are float64 values approximately in the range <code>-1..1</code>, mono, at 48000 Hz.</p>
+<p>To receive raw pre-demodulation IQ data, call <code>self.request_iq(True)</code> inside <code>on_load</code> and implement <code>on_iq(self, iq, rate)</code>. The IQ array is complex64 at the channel’s decimated sample rate.</p>
+
+<h3>DSP helpers (Python)</h3>
+<pre>from sdr_ext import StreamFIR, StreamResampler, lowpass_taps, encode_png
+
+taps = lowpass_taps(cutoff_hz, sample_rate, num_taps)
+fir = StreamFIR(taps)
+out = fir.process(samples)
+
+res = StreamResampler(in_rate, out_rate)
+out = res.process(samples)
+
+png_bytes = encode_png(uint8_array)
+</pre>
+
+<h2 id="examples">Examples</h2>
+
+<h3>Minimal audio level meter</h3>
+<pre>import numpy as np
+from sdr_ext import Extension, ui
+
+class LevelMeter(Extension):
+    name = "Level Meter"
+    description = "Displays the RMS level of the received audio."
+    author = "Example"
+    version = "1.0"
+
+    def on_load(self):
+        self.rms = 0.0
+        self.set_panel(
+            [ui.Label("lvl", "0.0 dBFS")],
+            title="Level Meter",
+            width=240
+        )
+
+    def on_audio(self, x, rate):
+        rms = float(np.sqrt(np.mean(x ** 2)))
+        self.rms = 0.8 * self.rms + 0.2 * rms
+
+    def on_tick(self):
+        db = 20 * np.log10(max(self.rms, 1e-9))
+        self.set_label("lvl", f"{db:.1f} dBFS")
+</pre>
+
+<h3>Simple DTMF tone detector</h3>
+<pre>import numpy as np
+from sdr_ext import Extension, ui
+
+ROW = [697, 770, 852, 941]
+COL = [1209, 1336, 1477, 1633]
+KEYS = [
+    ["1", "2", "3", "A"],
+    ["4", "5", "6", "B"],
+    ["7", "8", "9", "C"],
+    ["*", "0", "#", "D"],
+]
+
+class DTMFDecoder(Extension):
+    name = "DTMF Decoder"
+    description = "Detects DTMF tones"
+    author = "Example"
+    version = "1.0"
+
+    def on_load(self):
+        self.last = ""
+        self.set_panel([
+            ui.Label("key", "Listening..."),
+            ui.Text("out", "Digits", lines=4),
+        ], title="DTMF", width=280)
+
+    def on_audio(self, x, rate):
+        N = min(len(x), 2048)
+        spec = np.abs(np.fft.rfft(x[:N], N))
+        freqs = np.fft.rfftfreq(N, 1 / rate)
+
+        def peak(f):
+            return float(spec[np.argmin(np.abs(freqs - f))])
+
+        r = max(range(4), key=lambda i: peak(ROW[i]))
+        c = max(range(4), key=lambda i: peak(COL[i]))
+        digit = KEYS[r][c]
+
+        if peak(ROW[r]) > 200 and peak(COL[c]) > 200:
+            if digit != self.last:
+                self.last = digit
+                self.append_text("out", digit)
+                self.set_label("key", f"Key: {digit}")
+        else:
+            self.last = ""
+</pre>
+
+<h2 id="themes">Themes (.tcptheme)</h2>
+<p>WebTCP interface colors can be customized with <code>.tcptheme</code> files. Place the files in any accessible location and load them from the Themes section in settings.</p>
+
+<h3>Gradient theme</h3>
+<pre>gradient:true
+color1_FF0F7B
+color2_F89B29
+color3_FFD200
+</pre>
+
+<h3>Single color theme</h3>
+<pre>gradient:false
+color1_292F56
+</pre>
+
+<h3>Follow system light/dark mode</h3>
+<pre>gradient:false
+systemcolors:true
+</pre>
+
+<p>Colors are specified as six digit HEX values without a leading #.</p>
+
+</main>
+<footer>Licened under The GPL-3.0 license.</footer>
+</body>
+</html>
